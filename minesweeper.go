@@ -15,7 +15,8 @@ func main() {
 	var b board
 	b.setUp()
 	// fmt.Println(b.dBoard)
-	fmt.Println(b.eBoard)
+	// fmt.Println(b.eBoard)
+	printBoard(b.eBoard)
 }
 
 const mine int = -1
@@ -23,13 +24,11 @@ const undiscovered int = -2
 const flag int = -3
 
 func (b *board) setUp() {
-	// initial all values to unknown (-2)
 	var i int = 0
 	for i < 10 {
 		var j int = 0
 		for j < 10 {
-			(*b).dBoard[i][j] = undiscovered // -2 equals to '-' (not discovered yet)
-			j++
+			(*b).dBoard[i][j] = undiscovered
 		}
 		i++
 	}
@@ -85,5 +84,33 @@ func (b *board) fillEncodedBoard() {
 			}
 			(*b).eBoard[i][j] = total
 		}
+	}
+}
+
+func printBoard(board [10][10]int) {
+	println("    A B C D E F G H I J")
+	for i := 0; i < 10; i++ {
+		var str string
+		if i < 9 {
+			str += " " + fmt.Sprint(i+1)
+		} else {
+			str += "10"
+		}
+		str += " "
+		for j := 0; j < 10; j++ {
+			switch board[i][j] {
+			case mine:
+				str += " M"
+			case undiscovered:
+				str += " -"
+			case flag:
+				str += " F"
+			case 0:
+				str += "  "
+			case 1, 2, 3, 4, 5, 6, 7, 8:
+				str += " " + fmt.Sprint(board[i][j])
+			}
+		}
+		fmt.Println(str)
 	}
 }
