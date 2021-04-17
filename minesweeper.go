@@ -14,8 +14,6 @@ type board struct {
 func main() {
 	var b board
 	b.setUp()
-	// fmt.Println(b.dBoard)
-	// fmt.Println(b.eBoard)
 	printBoard(b.eBoard)
 }
 
@@ -24,14 +22,7 @@ const undiscovered int = -2
 const flag int = -3
 
 func (b *board) setUp() {
-	var i int = 0
-	for i < 10 {
-		var j int = 0
-		for j < 10 {
-			(*b).dBoard[i][j] = undiscovered
-		}
-		i++
-	}
+	b.fillDecodedBoard()
 	b.shuffleMines()
 	b.fillEncodedBoard()
 }
@@ -48,6 +39,18 @@ func (b *board) shuffleMines() {
 	mines := a[:21]
 	for _, val := range mines {
 		(*b).eBoard[val/10][val%10] = mine
+	}
+}
+
+func (b *board) fillDecodedBoard() {
+	var i int = 0
+	for i < 10 {
+		var j int = 0
+		for j < 10 {
+			(*b).dBoard[i][j] = undiscovered
+			j++
+		}
+		i++
 	}
 }
 
