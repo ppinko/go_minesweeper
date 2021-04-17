@@ -91,15 +91,10 @@ func (b *board) fillEncodedBoard() {
 }
 
 func printBoard(board [10][10]int) {
-	println("    A B C D E F G H I J")
+	println("   A B C D E F G H I J")
 	for i := 0; i < 10; i++ {
 		var str string
-		if i < 9 {
-			str += " " + fmt.Sprint(i+1)
-		} else {
-			str += "10"
-		}
-		str += " "
+		str += fmt.Sprint(i) + " "
 		for j := 0; j < 10; j++ {
 			switch board[i][j] {
 			case mine:
