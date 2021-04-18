@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+// board struct holds all data members necessary to describe the board and
+// the actual state of the game.
 type board struct {
 	side            int
 	numMines        int
@@ -19,20 +21,26 @@ type board struct {
 
 }
 
-func main() {
-	playGame()
-}
-
+// game constant variables
 const mine int = -1
 const undiscovered int = -2
 const flag int = -3
 
-func (b *board) setUp() {
-	(*b).fillDecodedBoard()
-	(*b).shuffleMines()
-	(*b).fillEncodedBoard()
+func main() {
+	playGame()
 }
 
+// fillDecodedBoard initializes decoded board to all fields containing
+// undiscovered value.
+func (b *board) fillDecodedBoard() {
+	for i := 0; i < b.side; i++ {
+		for j := 0; j < b.side; j++ {
+			(*b).dBoard[i][j] = undiscovered
+		}
+	}
+}
+
+// shuffleMines place randomly mines on the board.
 func (b *board) shuffleMines() {
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
@@ -42,24 +50,14 @@ func (b *board) shuffleMines() {
 		a[i] = i
 	}
 	r.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
-	mines := a[:b.numMines+1]
+	mines := a[:b.numMines]
 	for _, val := range mines {
 		(*b).eBoard[val/b.side][val%b.side] = mine
 	}
 }
 
-func (b *board) fillDecodedBoard() {
-	var i int = 0
-	for i < b.side {
-		var j int = 0
-		for j < b.side {
-			(*b).dBoard[i][j] = undiscovered
-			j++
-		}
-		i++
-	}
-}
-
+// fillEncodedBoard calculates values of each field of the board based on the
+// position of the mines.
 func (b *board) fillEncodedBoard() {
 	for i := 0; i < b.side; i++ {
 		for j := 0; j < b.side; j++ {
@@ -96,6 +94,14 @@ func (b *board) fillEncodedBoard() {
 	}
 }
 
+// setUp fills in both decoded and encoded boards with initial values.
+func (b *board) setUp() {
+	(*b).fillDecodedBoard()
+	(*b).shuffleMines()
+	(*b).fillEncodedBoard()
+}
+
+// printBoard print the board.
 func printBoard(board [10][10]int) {
 	println("   A B C D E F G H I J")
 	for i := 0; i < 10; i++ {
@@ -119,7 +125,9 @@ func printBoard(board [10][10]int) {
 	}
 }
 
-func userInput() []string {
+// userInput asks for the user input and validate it.
+// Returns valide user input.
+func (b *board) userInput() []string {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("-----------------------------------------")
@@ -137,7 +145,7 @@ func userInput() []string {
 		}
 		first := words[0]
 		if len(first) == 1 && strings.Compare(first, "Q") == 0 {
-			gameExit(false)
+			b.gameExit(false)
 		}
 		if len(first) == 2 && first[:1] >= "A" && first[:1] <= "J" && first[1:2] >= "0" && first[1:2] <= "9" {
 			if len(words) == 2 {
@@ -151,13 +159,18 @@ func userInput() []string {
 	}
 }
 
-// how to set default values
-func gameExit(result bool) {
+// gameExit exits the game loop.
+// If result is true, congratulions are displayed on the screen.
+func (b *board) gameExit(result bool) {
 	if result {
 		fmt.Println("Congratulation you won!!!")
 	}
 	fmt.Println("---------------------")
 	fmt.Println("Thank you very much for the game!")
+	fmt.Println("---------------------")
+	fmt.Println("Solution:")
+	printBoard(b.eBoard)
+	fmt.Println("---------------------")
 	for {
 		fmt.Println("Please press any key to leave the game.")
 		reader := bufio.NewReader(os.Stdin)
@@ -168,38 +181,8 @@ func gameExit(result bool) {
 	}
 }
 
-func playGame() {
-	side, numMines := 10, 20
-	// create instance of minesweeper board and initialize it
-	b := board{
-		side:            side,
-		numMines:        numMines,
-		remainingFields: side*side - numMines,
-		eBoard:          [10][10]int{},
-		dBoard:          [10][10]int{},
-	}
-	b.setUp()
-
-	fmt.Println("-----------------------------------------")
-	fmt.Println("WELCOME IN MINESWEEPER")
-	fmt.Println("Prepare for a lot of fun! :)\n")
-	for {
-		fmt.Println("Current board:")
-		printBoard(b.dBoard)
-		field := userInput()
-		col, row := inputConverter(field[0])
-		var checkFlag bool = false
-		if b.dBoard[row][col] != undiscovered && b.dBoard[row][col] != flag {
-			fmt.Println("The field", field[0], "was already revealed")
-			continue
-		}
-		if len(field) == 2 {
-			checkFlag = true
-		}
-		b.checkValue(row, col, checkFlag)
-	}
-}
-
+// inputConverter converts users input into position in the matrix.
+// Returns (x, y) where x is the number of row and y is the number of column.
 func inputConverter(field string) (int, int) {
 	startValue := int('A')
 	f := int(field[0])
@@ -207,6 +190,8 @@ func inputConverter(field string) (int, int) {
 	return f - startValue, n
 }
 
+// checkValue verifies if user guess is correct or not.
+// If user guess is incorrect and falls into mine the gameExit is called.
 func (b *board) checkValue(row int, col int, checkFlag bool) {
 	if checkFlag {
 		if (*b).dBoard[row][col] == flag {
@@ -222,13 +207,47 @@ func (b *board) checkValue(row int, col int, checkFlag bool) {
 			(*b).remainingFields -= 1
 			fmt.Println("Good pick!")
 			if (*b).remainingFields == 0 {
-				gameExit(true)
+				b.gameExit(true)
 			}
 		} else {
 			fmt.Println("MINE!!! The game lost")
 			fmt.Println("Solution:")
 			printBoard(b.eBoard)
-			gameExit(false)
+			b.gameExit(false)
 		}
+	}
+}
+
+// playGame starts new minesweeper game.
+func playGame() {
+	side, numMines := 10, 10
+	// create instance of minesweeper board and initialize it
+	b := board{
+		side:            side,
+		numMines:        numMines,
+		remainingFields: side*side - numMines,
+		eBoard:          [10][10]int{},
+		dBoard:          [10][10]int{},
+	}
+	b.setUp()
+
+	fmt.Println("-----------------------------------------")
+	fmt.Println("WELCOME IN MINESWEEPER")
+	fmt.Println("Prepare for a lot of fun! :)\n")
+	// Infinite game loop
+	for {
+		fmt.Println("Current board:")
+		printBoard(b.dBoard)
+		field := b.userInput()
+		col, row := inputConverter(field[0])
+		var checkFlag bool = false
+		if b.dBoard[row][col] != undiscovered && b.dBoard[row][col] != flag {
+			fmt.Println("The field", field[0], "was already revealed")
+			continue
+		}
+		if len(field) == 2 {
+			checkFlag = true
+		}
+		b.checkValue(row, col, checkFlag)
 	}
 }
