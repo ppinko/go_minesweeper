@@ -117,29 +117,36 @@ func printBoard(board [10][10]int) {
 	}
 }
 
-func userInput() (bool, []string) {
+func userInput() []string {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("---------------------")
-	fmt.Println("To quit the game press Q and press Enter: ")
-	fmt.Println("Please enter a field to undiscover (eg. A0) or set/unset a flag (eg. A0 F): ")
-	fmt.Print("-> ")
-	input, _ := reader.ReadString('\n')
-	// convert CRLF to LF
-	input = strings.Replace(input, "\n", "", -1)
-	input = strings.ToUpper(input)
-	words := strings.Split(input, " ")
-	if (len(words) == 0 || len(words) > 2 || len(words[0]) > 2) || (len(words) == 2 && len(words[1]) != 1) {
-		return false, []string{}
+	for {
+		fmt.Println("-----------------------------------------")
+		fmt.Println("To quit the game press Q and press Enter: ")
+		fmt.Println("Please enter a field to undiscover (eg. A0) or set/unset a flag (eg. A0 F): ")
+		fmt.Print("-> ")
+		input, _ := reader.ReadString('\n')
+		// convert CRLF to LF
+		input = strings.Replace(input, "\n", "", -1)
+		input = strings.ToUpper(input)
+		words := strings.Split(input, " ")
+		if (len(words) == 0 || len(words) > 2 || len(words[0]) > 2) || (len(words) == 2 && len(words[1]) != 1) {
+			fmt.Println("Invalid input!")
+			continue
+		}
+		first := words[0]
+		if len(first) == 1 && strings.Compare(first, "Q") == 0 {
+			gameExit()
+		}
+		if len(first) == 2 && first[:1] >= "A" && first[:1] <= "J" && first[1:2] >= "0" && first[1:2] <= "9" {
+			if len(words) == 2 {
+				if words[1] != "F" {
+					fmt.Println("Invalid input!")
+					continue
+				}
+			}
+			return words
+		}
 	}
-	first := words[0]
-	if len(first) == 1 && strings.Compare(first, "Q") == 0 {
-		gameExit()
-	}
-	if len(first) == 2 && first[:1] >= "A" && first[:1] <= "J" && first[1:2] >= "0" && first[1:2] <= "9" {
-		return true, words
-	}
-
-	return false, []string{}
 }
 
 func gameExit() {
@@ -153,4 +160,10 @@ func gameExit() {
 			os.Exit(0)
 		}
 	}
+}
+
+func playGame() {
+	fmt.Println("-----------------------------------------")
+	fmt.Println("WELCOME IN MINESWEEPER")
+	fmt.Println("Prepare for a lot of fun! :)\n")
 }
