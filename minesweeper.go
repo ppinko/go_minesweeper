@@ -179,8 +179,6 @@ func playGame() {
 		dBoard:          [10][10]int{},
 	}
 	b.setUp()
-	printBoard(b.dBoard)
-	printBoard(b.eBoard)
 
 	fmt.Println("-----------------------------------------")
 	fmt.Println("WELCOME IN MINESWEEPER")
