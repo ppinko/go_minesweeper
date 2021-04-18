@@ -20,13 +20,6 @@ type board struct {
 }
 
 func main() {
-	// test := "B4"
-	// x, y := inputConverter(test)
-	// fmt.Println("x =", x, ", y =", y)
-	// var b board
-	// b.setUp()
-	// userInput()
-	// printBoard(b.eBoard)
 	playGame()
 }
 
@@ -35,9 +28,9 @@ const undiscovered int = -2
 const flag int = -3
 
 func (b *board) setUp() {
-	// b.fillDecodedBoard()
-	// b.shuffleMines()
-	// b.fillEncodedBoard()
+	(*b).fillDecodedBoard()
+	(*b).shuffleMines()
+	(*b).fillEncodedBoard()
 }
 
 func (b *board) shuffleMines() {
@@ -57,9 +50,9 @@ func (b *board) shuffleMines() {
 
 func (b *board) fillDecodedBoard() {
 	var i int = 0
-	for i < b.numMines {
+	for i < b.side {
 		var j int = 0
-		for j < b.numMines {
+		for j < b.side {
 			(*b).dBoard[i][j] = undiscovered
 			j++
 		}
@@ -68,8 +61,8 @@ func (b *board) fillDecodedBoard() {
 }
 
 func (b *board) fillEncodedBoard() {
-	for i := 0; i < b.numMines; i++ {
-		for j := 0; j < b.numMines; j++ {
+	for i := 0; i < b.side; i++ {
+		for j := 0; j < b.side; j++ {
 			if (*b).eBoard[i][j] == mine {
 				continue
 			}
@@ -130,7 +123,7 @@ func userInput() []string {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("-----------------------------------------")
-		fmt.Println("To quit the game press Q and press Enter: ")
+		fmt.Println("To quit the game press Q and press Enter.")
 		fmt.Println("Please enter a field to undiscover (eg. A0) or set/unset a flag (eg. A0 F): ")
 		fmt.Print("-> ")
 		input, _ := reader.ReadString('\n')
@@ -186,15 +179,19 @@ func playGame() {
 		dBoard:          [10][10]int{},
 	}
 	b.setUp()
+	printBoard(b.dBoard)
+	printBoard(b.eBoard)
 
 	fmt.Println("-----------------------------------------")
 	fmt.Println("WELCOME IN MINESWEEPER")
 	fmt.Println("Prepare for a lot of fun! :)\n")
 	for {
+		fmt.Println("Current board:")
+		printBoard(b.dBoard)
 		field := userInput()
 		col, row := inputConverter(field[0])
 		var checkFlag bool = false
-		if b.dBoard[row][col] != flag && b.dBoard[row][col] != undiscovered {
+		if b.dBoard[row][col] != undiscovered && b.dBoard[row][col] != flag {
 			fmt.Println("The field", field[0], "was already revealed")
 			continue
 		}
@@ -231,6 +228,8 @@ func (b *board) checkValue(row int, col int, checkFlag bool) {
 			}
 		} else {
 			fmt.Println("MINE!!! The game lost")
+			fmt.Println("Solution:")
+			printBoard(b.eBoard)
 			gameExit(false)
 		}
 	}
