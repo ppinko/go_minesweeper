@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -15,10 +16,13 @@ type board struct {
 }
 
 func main() {
-	var b board
-	b.setUp()
-	userInput()
-	printBoard(b.eBoard)
+	test := "B4"
+	x, y := inputConverter(test)
+	fmt.Println("x =", x, ", y =", y)
+	// var b board
+	// b.setUp()
+	// userInput()
+	// printBoard(b.eBoard)
 }
 
 const mine int = -1
@@ -26,9 +30,9 @@ const undiscovered int = -2
 const flag int = -3
 
 func (b *board) setUp() {
-	b.fillDecodedBoard()
-	b.shuffleMines()
-	b.fillEncodedBoard()
+	// b.fillDecodedBoard()
+	// b.shuffleMines()
+	// b.fillEncodedBoard()
 }
 
 func (b *board) shuffleMines() {
@@ -135,7 +139,7 @@ func userInput() []string {
 		}
 		first := words[0]
 		if len(first) == 1 && strings.Compare(first, "Q") == 0 {
-			gameExit()
+			gameExit(false)
 		}
 		if len(first) == 2 && first[:1] >= "A" && first[:1] <= "J" && first[1:2] >= "0" && first[1:2] <= "9" {
 			if len(words) == 2 {
@@ -149,9 +153,13 @@ func userInput() []string {
 	}
 }
 
-func gameExit() {
+// how to set default values
+func gameExit(result bool) {
 	fmt.Println("---------------------")
 	fmt.Println("Thank you very much for the game!")
+	if result {
+		fmt.Println("Congratulation you won!!!")
+	}
 	for {
 		fmt.Println("Please press any key to leave the game.")
 		reader := bufio.NewReader(os.Stdin)
@@ -163,7 +171,21 @@ func gameExit() {
 }
 
 func playGame() {
+	// create instance of minesweeper board and initialize it
+	var b board
+	b.setUp()
+
 	fmt.Println("-----------------------------------------")
 	fmt.Println("WELCOME IN MINESWEEPER")
 	fmt.Println("Prepare for a lot of fun! :)\n")
+	// for {
+	// 	//field := userInput()
+	// }
+}
+
+func inputConverter(field string) (int, int) {
+	startValue := int('A')
+	f := int(field[0])
+	n, _ := strconv.Atoi(field[1:])
+	return f - startValue, n
 }
