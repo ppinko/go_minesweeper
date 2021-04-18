@@ -12,12 +12,14 @@ import (
 
 // board struct holds all data members necessary to describe the board and
 // the actual state of the game.
+// eBoard - encoded board, actual solution
+// dBoard - decoded board, represents current game board with
 type board struct {
 	side            int
 	numMines        int
 	remainingFields int
-	eBoard          [10][10]int // encoded board
-	dBoard          [10][10]int // decoded board
+	eBoard          [10][10]int
+	dBoard          [10][10]int
 }
 
 // game constant variables
@@ -41,14 +43,18 @@ func (b *board) fillDecodedBoard() {
 
 // shuffleMines place randomly mines on the board.
 func (b *board) shuffleMines() {
+	// create truly random number generator using current time as seed
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
 
+	// generate random numbers
 	a := make([]int, 100)
 	for i := range a {
 		a[i] = i
 	}
 	r.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
+
+	// assign mines to the encoded board
 	mines := a[:b.numMines]
 	for _, val := range mines {
 		(*b).eBoard[val/b.side][val%b.side] = mine
@@ -60,32 +66,34 @@ func (b *board) shuffleMines() {
 func (b *board) fillEncodedBoard() {
 	for i := 0; i < b.side; i++ {
 		for j := 0; j < b.side; j++ {
+			// skip fields were are mines
 			if (*b).eBoard[i][j] == mine {
 				continue
 			}
 			total := 0
+			// check all 8 neighbouring fields for existence of mines
 			if i-1 >= 0 && j-1 >= 0 && (*b).eBoard[i-1][j-1] == mine {
 				total++
 			}
 			if i-1 >= 0 && (*b).eBoard[i-1][j] == mine {
 				total++
 			}
-			if i-1 >= 0 && j+1 < 10 && (*b).eBoard[i-1][j+1] == mine {
+			if i-1 >= 0 && j+1 < (*b).side && (*b).eBoard[i-1][j+1] == mine {
 				total++
 			}
 			if j-1 >= 0 && (*b).eBoard[i][j-1] == mine {
 				total++
 			}
-			if j+1 < 10 && (*b).eBoard[i][j+1] == mine {
+			if j+1 < (*b).side && (*b).eBoard[i][j+1] == mine {
 				total++
 			}
-			if i+1 < 10 && j-1 >= 0 && (*b).eBoard[i+1][j-1] == mine {
+			if i+1 < (*b).side && j-1 >= 0 && (*b).eBoard[i+1][j-1] == mine {
 				total++
 			}
-			if i+1 < 10 && (*b).eBoard[i+1][j] == mine {
+			if i+1 < (*b).side && (*b).eBoard[i+1][j] == mine {
 				total++
 			}
-			if i+1 < 10 && j+1 < 10 && (*b).eBoard[i+1][j+1] == mine {
+			if i+1 < (*b).side && j+1 < (*b).side && (*b).eBoard[i+1][j+1] == mine {
 				total++
 			}
 			(*b).eBoard[i][j] = total
@@ -100,13 +108,12 @@ func (b *board) setUp() {
 	(*b).fillEncodedBoard()
 }
 
-// printBoard print the board.
+// printBoard prints the board.
 func printBoard(board [10][10]int) {
 	println("   A B C D E F G H I J")
-	for i := 0; i < 10; i++ {
-		var str string
-		str += fmt.Sprint(i) + " "
-		for j := 0; j < 10; j++ {
+	for i := 0; i < len(board); i++ {
+		str := fmt.Sprint(i) + " "
+		for j := 0; j < len(board[0]); j++ {
 			switch board[i][j] {
 			case mine:
 				str += " M"
@@ -124,9 +131,10 @@ func printBoard(board [10][10]int) {
 	}
 }
 
-// userInput asks for the user input and validate it.
+// userInput asks for the user input and validates it.
 // Returns valide user input.
 func (b *board) userInput() []string {
+	// create an instance of buffered I/O
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("-----------------------------------------")
@@ -136,8 +144,10 @@ func (b *board) userInput() []string {
 		input, _ := reader.ReadString('\n')
 		// convert CRLF to LF
 		input = strings.Replace(input, "\n", "", -1)
+		// converting to upper letters simplifies necessary number of comparisons
 		input = strings.ToUpper(input)
 		words := strings.Split(input, " ")
+		// validation of the input
 		if (len(words) == 0 || len(words) > 2 || len(words[0]) > 2) || (len(words) == 2 && len(words[1]) != 1) {
 			fmt.Println("Invalid input!")
 			continue
@@ -162,7 +172,7 @@ func (b *board) userInput() []string {
 // If result is true, congratulions are displayed on the screen.
 func (b *board) gameExit(result bool) {
 	if result {
-		fmt.Println("Congratulation you won!!!")
+		fmt.Println("CONGRATULATION YOU WON!!!")
 	}
 	fmt.Println("---------------------")
 	fmt.Println("Thank you very much for the game!")
@@ -185,6 +195,7 @@ func (b *board) gameExit(result bool) {
 func inputConverter(field string) (int, int) {
 	startValue := int('A')
 	f := int(field[0])
+	// strconv.Atoi can be used when string is a number representation
 	n, _ := strconv.Atoi(field[1:])
 	return f - startValue, n
 }
@@ -207,9 +218,11 @@ func (b *board) checkValue(row int, col int, checkFlag bool, print bool) {
 			if print {
 				fmt.Println("Good pick!")
 			}
+			// update neighbouring fields if the guess field value is zero
 			if (*b).dBoard[row][col] == 0 {
 				b.updateNeihbours(row, col)
 			}
+			// check winning conditions
 			if (*b).remainingFields == 0 {
 				b.gameExit(true)
 			}
@@ -222,6 +235,8 @@ func (b *board) checkValue(row int, col int, checkFlag bool, print bool) {
 	}
 }
 
+// updateNeighbours displays values of neihbouring fields if the guessed field
+// value equals zero.
 func (b *board) updateNeihbours(row int, col int) {
 	toCheck := []int{(row * b.side) + col}
 	for len(toCheck) != 0 {
