@@ -11,18 +11,23 @@ import (
 )
 
 type board struct {
-	eBoard [10][10]int // encoded board
-	dBoard [10][10]int // decoded board
+	side            int
+	numMines        int
+	remainingFields int
+	eBoard          [10][10]int // encoded board
+	dBoard          [10][10]int // decoded board
+
 }
 
 func main() {
-	test := "B4"
-	x, y := inputConverter(test)
-	fmt.Println("x =", x, ", y =", y)
+	// test := "B4"
+	// x, y := inputConverter(test)
+	// fmt.Println("x =", x, ", y =", y)
 	// var b board
 	// b.setUp()
 	// userInput()
 	// printBoard(b.eBoard)
+	playGame()
 }
 
 const mine int = -1
@@ -44,17 +49,17 @@ func (b *board) shuffleMines() {
 		a[i] = i
 	}
 	r.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
-	mines := a[:21]
+	mines := a[:b.numMines+1]
 	for _, val := range mines {
-		(*b).eBoard[val/10][val%10] = mine
+		(*b).eBoard[val/b.side][val%b.side] = mine
 	}
 }
 
 func (b *board) fillDecodedBoard() {
 	var i int = 0
-	for i < 10 {
+	for i < b.numMines {
 		var j int = 0
-		for j < 10 {
+		for j < b.numMines {
 			(*b).dBoard[i][j] = undiscovered
 			j++
 		}
@@ -63,8 +68,8 @@ func (b *board) fillDecodedBoard() {
 }
 
 func (b *board) fillEncodedBoard() {
-	for i := 0; i < 10; i++ {
-		for j := 0; j < 10; j++ {
+	for i := 0; i < b.numMines; i++ {
+		for j := 0; j < b.numMines; j++ {
 			if (*b).eBoard[i][j] == mine {
 				continue
 			}
@@ -155,11 +160,11 @@ func userInput() []string {
 
 // how to set default values
 func gameExit(result bool) {
-	fmt.Println("---------------------")
-	fmt.Println("Thank you very much for the game!")
 	if result {
 		fmt.Println("Congratulation you won!!!")
 	}
+	fmt.Println("---------------------")
+	fmt.Println("Thank you very much for the game!")
 	for {
 		fmt.Println("Please press any key to leave the game.")
 		reader := bufio.NewReader(os.Stdin)
@@ -171,16 +176,33 @@ func gameExit(result bool) {
 }
 
 func playGame() {
+	side, numMines := 10, 20
 	// create instance of minesweeper board and initialize it
-	var b board
+	b := board{
+		side:            side,
+		numMines:        numMines,
+		remainingFields: side*side - numMines,
+		eBoard:          [10][10]int{},
+		dBoard:          [10][10]int{},
+	}
 	b.setUp()
 
 	fmt.Println("-----------------------------------------")
 	fmt.Println("WELCOME IN MINESWEEPER")
 	fmt.Println("Prepare for a lot of fun! :)\n")
-	// for {
-	// 	//field := userInput()
-	// }
+	for {
+		field := userInput()
+		col, row := inputConverter(field[0])
+		var checkFlag bool = false
+		if b.dBoard[row][col] != flag && b.dBoard[row][col] != undiscovered {
+			fmt.Println("The field", field[0], "was already revealed")
+			continue
+		}
+		if len(field) == 2 {
+			checkFlag = true
+		}
+		b.checkValue(row, col, checkFlag)
+	}
 }
 
 func inputConverter(field string) (int, int) {
@@ -188,4 +210,28 @@ func inputConverter(field string) (int, int) {
 	f := int(field[0])
 	n, _ := strconv.Atoi(field[1:])
 	return f - startValue, n
+}
+
+func (b *board) checkValue(row int, col int, checkFlag bool) {
+	if checkFlag {
+		if (*b).dBoard[row][col] == flag {
+			(*b).dBoard[row][col] = undiscovered
+			fmt.Println("Flag was added!")
+		} else {
+			(*b).dBoard[row][col] = flag
+			fmt.Println("Flag was removed!")
+		}
+	} else {
+		(*b).dBoard[row][col] = (*b).eBoard[row][col]
+		if (*b).dBoard[row][col] != mine {
+			(*b).remainingFields -= 1
+			fmt.Println("Good pick!")
+			if (*b).remainingFields == 0 {
+				gameExit(true)
+			}
+		} else {
+			fmt.Println("MINE!!! The game lost")
+			gameExit(false)
+		}
+	}
 }
