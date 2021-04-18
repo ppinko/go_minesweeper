@@ -191,7 +191,7 @@ func inputConverter(field string) (int, int) {
 
 // checkValue verifies if user guess is correct or not.
 // If user guess is incorrect and falls into mine the gameExit is called.
-func (b *board) checkValue(row int, col int, checkFlag bool) {
+func (b *board) checkValue(row int, col int, checkFlag bool, print bool) {
 	if checkFlag {
 		if (*b).dBoard[row][col] == flag {
 			(*b).dBoard[row][col] = undiscovered
@@ -204,7 +204,9 @@ func (b *board) checkValue(row int, col int, checkFlag bool) {
 		(*b).dBoard[row][col] = (*b).eBoard[row][col]
 		if (*b).dBoard[row][col] != mine {
 			(*b).remainingFields -= 1
-			fmt.Println("Good pick!")
+			if print {
+				fmt.Println("Good pick!")
+			}
 			if (*b).dBoard[row][col] == 0 {
 				b.updateNeihbours(row, col)
 			}
@@ -225,44 +227,60 @@ func (b *board) updateNeihbours(row int, col int) {
 	for len(toCheck) != 0 {
 		i, j := toCheck[0]/b.side, toCheck[0]%b.side
 		n, m := i-1, j-1
-		if n >= 0 && m >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if n >= 0 && m >= 0 && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i-1, j
-		if n >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if n >= 0 && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i-1, j+1
-		if n >= 0 && m < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if n >= 0 && m < b.side && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i, j-1
-		if m >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if m >= 0 && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i, j+1
-		if m < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if m < b.side && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i+1, j-1
-		if n < b.side && m >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if n < b.side && m >= 0 && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i+1, j
-		if n < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if n < b.side && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		n, m = i+1, j+1
-		if n < b.side && m < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
-			b.checkValue(n, m, false)
-			toCheck = append(toCheck, (n*b.side)+m)
+		if n < b.side && m < b.side && (*b).dBoard[n][m] == undiscovered {
+			b.checkValue(n, m, false, false)
+			if (*b).eBoard[n][m] == 0 {
+				toCheck = append(toCheck, (n*b.side)+m)
+			}
 		}
 		toCheck = append(toCheck[1:])
 	}
@@ -298,6 +316,6 @@ func playGame() {
 		if len(field) == 2 {
 			checkFlag = true
 		}
-		b.checkValue(row, col, checkFlag)
+		b.checkValue(row, col, checkFlag, true)
 	}
 }
