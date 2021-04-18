@@ -133,12 +133,24 @@ func userInput() (bool, []string) {
 	}
 	first := words[0]
 	if len(first) == 1 && strings.Compare(first, "Q") == 0 {
-		// exit the game
-		os.Exit(0)
+		gameExit()
 	}
 	if len(first) == 2 && first[:1] >= "A" && first[:1] <= "J" && first[1:2] >= "0" && first[1:2] <= "9" {
 		return true, words
 	}
 
 	return false, []string{}
+}
+
+func gameExit() {
+	fmt.Println("---------------------")
+	fmt.Println("Thank you very much for the game!")
+	for {
+		fmt.Println("Please press any key to leave the game.")
+		reader := bufio.NewReader(os.Stdin)
+		input, _ := reader.ReadString('\n')
+		if len(input) != 0 {
+			os.Exit(0)
+		}
+	}
 }
