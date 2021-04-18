@@ -18,7 +18,6 @@ type board struct {
 	remainingFields int
 	eBoard          [10][10]int // encoded board
 	dBoard          [10][10]int // decoded board
-
 }
 
 // game constant variables
@@ -206,6 +205,9 @@ func (b *board) checkValue(row int, col int, checkFlag bool) {
 		if (*b).dBoard[row][col] != mine {
 			(*b).remainingFields -= 1
 			fmt.Println("Good pick!")
+			if (*b).dBoard[row][col] == 0 {
+				b.updateNeihbours(row, col)
+			}
 			if (*b).remainingFields == 0 {
 				b.gameExit(true)
 			}
@@ -215,6 +217,54 @@ func (b *board) checkValue(row int, col int, checkFlag bool) {
 			printBoard(b.eBoard)
 			b.gameExit(false)
 		}
+	}
+}
+
+func (b *board) updateNeihbours(row int, col int) {
+	toCheck := []int{(row * b.side) + col}
+	for len(toCheck) != 0 {
+		i, j := toCheck[0]/b.side, toCheck[0]%b.side
+		n, m := i-1, j-1
+		if n >= 0 && m >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i-1, j
+		if n >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i-1, j+1
+		if n >= 0 && m < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i, j-1
+		if m >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i, j+1
+		if m < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i+1, j-1
+		if n < b.side && m >= 0 && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i+1, j
+		if n < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		n, m = i+1, j+1
+		if n < b.side && m < b.side && (*b).dBoard[n][m] == undiscovered && (*b).eBoard[n][m] == 0 {
+			b.checkValue(n, m, false)
+			toCheck = append(toCheck, (n*b.side)+m)
+		}
+		toCheck = append(toCheck[1:])
 	}
 }
 
