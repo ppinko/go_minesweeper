@@ -20,12 +20,15 @@ type board struct {
 	remainingFields int
 	eBoard          [10][10]int
 	dBoard          [10][10]int
+	gConst          gameConstants
 }
 
 // game constant variables
-const mine int = -1
-const undiscovered int = -2
-const flag int = -3
+type gameConstants struct {
+	mine         int
+	undiscovered int
+	flag         int
+}
 
 func main() {
 	playGame()
@@ -36,7 +39,7 @@ func main() {
 func (b *board) fillDecodedBoard() {
 	for i := 0; i < b.side; i++ {
 		for j := 0; j < b.side; j++ {
-			(*b).dBoard[i][j] = undiscovered
+			(*b).dBoard[i][j] = b.gConst.undiscovered
 		}
 	}
 }
@@ -57,7 +60,7 @@ func (b *board) shuffleMines() {
 	// assign mines to the encoded board
 	mines := a[:b.numMines]
 	for _, val := range mines {
-		(*b).eBoard[val/b.side][val%b.side] = mine
+		(*b).eBoard[val/b.side][val%b.side] = b.gConst.mine
 	}
 }
 
@@ -67,33 +70,33 @@ func (b *board) fillEncodedBoard() {
 	for i := 0; i < b.side; i++ {
 		for j := 0; j < b.side; j++ {
 			// skip fields were are mines
-			if (*b).eBoard[i][j] == mine {
+			if (*b).eBoard[i][j] == b.gConst.mine {
 				continue
 			}
 			total := 0
 			// check all 8 neighbouring fields for existence of mines
-			if i-1 >= 0 && j-1 >= 0 && (*b).eBoard[i-1][j-1] == mine {
+			if i-1 >= 0 && j-1 >= 0 && (*b).eBoard[i-1][j-1] == b.gConst.mine {
 				total++
 			}
-			if i-1 >= 0 && (*b).eBoard[i-1][j] == mine {
+			if i-1 >= 0 && (*b).eBoard[i-1][j] == b.gConst.mine {
 				total++
 			}
-			if i-1 >= 0 && j+1 < (*b).side && (*b).eBoard[i-1][j+1] == mine {
+			if i-1 >= 0 && j+1 < (*b).side && (*b).eBoard[i-1][j+1] == b.gConst.mine {
 				total++
 			}
-			if j-1 >= 0 && (*b).eBoard[i][j-1] == mine {
+			if j-1 >= 0 && (*b).eBoard[i][j-1] == b.gConst.mine {
 				total++
 			}
-			if j+1 < (*b).side && (*b).eBoard[i][j+1] == mine {
+			if j+1 < (*b).side && (*b).eBoard[i][j+1] == b.gConst.mine {
 				total++
 			}
-			if i+1 < (*b).side && j-1 >= 0 && (*b).eBoard[i+1][j-1] == mine {
+			if i+1 < (*b).side && j-1 >= 0 && (*b).eBoard[i+1][j-1] == b.gConst.mine {
 				total++
 			}
-			if i+1 < (*b).side && (*b).eBoard[i+1][j] == mine {
+			if i+1 < (*b).side && (*b).eBoard[i+1][j] == b.gConst.mine {
 				total++
 			}
-			if i+1 < (*b).side && j+1 < (*b).side && (*b).eBoard[i+1][j+1] == mine {
+			if i+1 < (*b).side && j+1 < (*b).side && (*b).eBoard[i+1][j+1] == b.gConst.mine {
 				total++
 			}
 			(*b).eBoard[i][j] = total
@@ -109,17 +112,17 @@ func (b *board) setUp() {
 }
 
 // printBoard prints the board.
-func printBoard(board [10][10]int) {
+func printBoard(board [10][10]int, constants gameConstants) {
 	println("   A B C D E F G H I J")
 	for i := 0; i < len(board); i++ {
 		str := fmt.Sprint(i) + " "
 		for j := 0; j < len(board[0]); j++ {
 			switch board[i][j] {
-			case mine:
+			case constants.mine:
 				str += " M"
-			case undiscovered:
+			case constants.undiscovered:
 				str += " -"
-			case flag:
+			case constants.flag:
 				str += " F"
 			case 0:
 				str += "  "
@@ -178,7 +181,7 @@ func (b *board) gameExit(result bool) {
 	fmt.Println("Thank you very much for the game!")
 	fmt.Println("---------------------")
 	fmt.Println("Solution:")
-	printBoard(b.eBoard)
+	printBoard(b.eBoard, b.gConst)
 	fmt.Println("---------------------")
 	for {
 		fmt.Println("Please press any key to leave the game.")
@@ -204,16 +207,16 @@ func inputConverter(field string) (int, int) {
 // If user guess is incorrect and falls into mine the gameExit is called.
 func (b *board) checkValue(row int, col int, checkFlag bool, print bool) {
 	if checkFlag {
-		if (*b).dBoard[row][col] == flag {
-			(*b).dBoard[row][col] = undiscovered
+		if (*b).dBoard[row][col] == b.gConst.flag {
+			(*b).dBoard[row][col] = b.gConst.undiscovered
 			fmt.Println("Flag was added!")
 		} else {
-			(*b).dBoard[row][col] = flag
+			(*b).dBoard[row][col] = b.gConst.flag
 			fmt.Println("Flag was removed!")
 		}
 	} else {
 		(*b).dBoard[row][col] = (*b).eBoard[row][col]
-		if (*b).dBoard[row][col] != mine {
+		if (*b).dBoard[row][col] != b.gConst.mine {
 			(*b).remainingFields -= 1
 			if print {
 				fmt.Println("Good pick!")
@@ -229,7 +232,7 @@ func (b *board) checkValue(row int, col int, checkFlag bool, print bool) {
 		} else {
 			fmt.Println("MINE!!! The game lost")
 			fmt.Println("Solution:")
-			printBoard(b.eBoard)
+			printBoard(b.eBoard, b.gConst)
 			b.gameExit(false)
 		}
 	}
@@ -242,56 +245,56 @@ func (b *board) updateNeihbours(row int, col int) {
 	for len(toCheck) != 0 {
 		i, j := toCheck[0]/b.side, toCheck[0]%b.side
 		n, m := i-1, j-1
-		if n >= 0 && m >= 0 && (*b).dBoard[n][m] == undiscovered {
+		if n >= 0 && m >= 0 && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i-1, j
-		if n >= 0 && (*b).dBoard[n][m] == undiscovered {
+		if n >= 0 && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i-1, j+1
-		if n >= 0 && m < b.side && (*b).dBoard[n][m] == undiscovered {
+		if n >= 0 && m < b.side && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i, j-1
-		if m >= 0 && (*b).dBoard[n][m] == undiscovered {
+		if m >= 0 && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i, j+1
-		if m < b.side && (*b).dBoard[n][m] == undiscovered {
+		if m < b.side && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i+1, j-1
-		if n < b.side && m >= 0 && (*b).dBoard[n][m] == undiscovered {
+		if n < b.side && m >= 0 && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i+1, j
-		if n < b.side && (*b).dBoard[n][m] == undiscovered {
+		if n < b.side && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
 			}
 		}
 		n, m = i+1, j+1
-		if n < b.side && m < b.side && (*b).dBoard[n][m] == undiscovered {
+		if n < b.side && m < b.side && (*b).dBoard[n][m] == b.gConst.undiscovered {
 			b.checkValue(n, m, false, false)
 			if (*b).eBoard[n][m] == 0 {
 				toCheck = append(toCheck, (n*b.side)+m)
@@ -311,6 +314,11 @@ func playGame() {
 		remainingFields: side*side - numMines,
 		eBoard:          [10][10]int{},
 		dBoard:          [10][10]int{},
+		gConst: gameConstants{
+			mine:         -1,
+			undiscovered: -2,
+			flag:         -3,
+		},
 	}
 	b.setUp()
 
@@ -320,11 +328,11 @@ func playGame() {
 	// Infinite game loop
 	for {
 		fmt.Println("Current board:")
-		printBoard(b.dBoard)
+		printBoard(b.dBoard, b.gConst)
 		field := b.userInput()
 		col, row := inputConverter(field[0])
 		var checkFlag bool = false
-		if b.dBoard[row][col] != undiscovered && b.dBoard[row][col] != flag {
+		if b.dBoard[row][col] != b.gConst.undiscovered && b.dBoard[row][col] != b.gConst.flag {
 			fmt.Println("The field", field[0], "was already revealed")
 			continue
 		}
